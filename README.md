@@ -9,6 +9,11 @@
 
 A **production-grade, full-stack multi-tenant SaaS dashboard** built with React, Node.js, Express, and MongoDB. Features JWT authentication, role-based access control (RBAC), real-time analytics, and organization-based user management — mirroring the architecture of real-world SaaS platforms like Notion and Slack.
 
+🌐 **Live Demo:** [https://saas-dashboard-frontend-jdyf.onrender.com](https://saas-dashboard-frontend-jdyf.onrender.com)
+🔗 **Backend API:** [https://saas-dashboard-backend-84ds.onrender.com](https://saas-dashboard-backend-84ds.onrender.com)
+
+> ⚠️ Hosted on Render free tier — first load may take 30–60 seconds to spin up.
+
 ---
 
 ## ✨ Features
@@ -49,6 +54,21 @@ A **production-grade, full-stack multi-tenant SaaS dashboard** built with React,
 | **Analytics** | Revenue, Active Users, Sessions — 3 Recharts graphs |
 | **Users** | Member table with role badges, invite modal |
 | **Settings** | Org settings panel |
+
+---
+
+## 🔴 Live Demo
+
+| | URL |
+|-|-----|
+| **Frontend** | https://saas-dashboard-frontend-jdyf.onrender.com |
+| **Backend API** | https://saas-dashboard-backend-84ds.onrender.com |
+
+**Demo credentials:**
+```
+Email:    admin@acme.com
+Password: Harsh123
+```
 
 ---
 
