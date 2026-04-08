@@ -1,3 +1,7 @@
+# Root
+node_modules/
+package-lock.json
+
 # Backend
 backend/.env
 backend/node_modules/
