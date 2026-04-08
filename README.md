@@ -14,6 +14,15 @@ A **production-grade, full-stack multi-tenant SaaS dashboard** built with React,
 
 > ⚠️ Hosted on Render free tier — first load may take 30–60 seconds to spin up.
 
+<img width="960" height="414" alt="Screenshot 2026-04-08 234926" src="https://github.com/user-attachments/assets/71dfd583-a65e-471d-83a8-1d504b7b0268" />
+<img width="960" height="413" alt="Screenshot 2026-04-08 234947" src="https://github.com/user-attachments/assets/499a453d-b1a2-44fa-a366-4b37e850ece4" />
+<img width="960" height="414" alt="Screenshot 2026-04-08 235208" src="https://github.com/user-attachments/assets/c15dd5e0-505e-426f-a1e1-199fe7bed3b9" />
+<img width="960" height="409" alt="Screenshot 2026-04-08 235231" src="https://github.com/user-attachments/assets/e5ddb6f6-15d3-41f0-bbe4-1a5196d5bbf4" />
+
+
+
+
+
 ---
 
 ## ✨ Features
