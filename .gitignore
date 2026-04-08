@@ -1,0 +1,19 @@
+# Backend
+backend/.env
+backend/node_modules/
+backend/logs/
+
+# Frontend
+frontend/.env
+frontend/node_modules/
+frontend/build/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.suo
+*.user
