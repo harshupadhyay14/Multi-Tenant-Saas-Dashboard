@@ -4,7 +4,11 @@ import { useAuth } from "../context/AuthContext";
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user, loading } = useAuth();
 
-  if (loading) return <div style={{ color: "#fff", padding: 40 }}>Loading...</div>;
+  if (loading) return (
+  <div style={{ color: "#fff", padding: 40, background: "#06060f", minHeight: "100vh" }}>
+    Loading...
+  </div>
+  );
   if (!user) return <Navigate to="/login" replace />;
 
   if (allowedRoles && !allowedRoles.includes(user.systemRole)) {
