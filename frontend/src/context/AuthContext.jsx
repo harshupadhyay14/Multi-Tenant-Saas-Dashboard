@@ -8,26 +8,28 @@ export const AuthProvider = ({ children }) => {
   const [org, setOrg]       = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // On app load, if token exists — fetch current user
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      api.get("/auth/me")
-        .then((res) => {
-          setUser(res.data.user);
-          // Set first org as active by default
-          if (res.data.user.memberships?.length > 0) {
-            const membership = res.data.user.memberships[0];
-            // orgId can be a string or populated object
-            setOrg(membership.orgId);
-          }
-        })
-        .catch(() => localStorage.removeItem("token"))
-        .finally(() => setLoading(false));
-    } else {
-      setLoading(false);
-    }
-  }, []);
+useEffect(() => {
+  const token = localStorage.getItem("token");
+  if (token) {
+    api.get("/auth/me")
+      .then((res) => {
+        setUser(res.data.user);
+        if (res.data.user.memberships?.length > 0) {
+          const membership = res.data.user.memberships[0];
+          setOrg(membership.orgId);
+        }
+      })
+      .catch((err) => {
+        // Only logout on auth errors, not network errors
+        if (err.response?.status === 401) {
+          localStorage.removeItem("token");
+        }
+      })
+      .finally(() => setLoading(false));
+  } else {
+    setLoading(false);
+  }
+}, []);
 
   const login = async (email, password) => {
     const res = await api.post("/auth/login", { email, password });
