@@ -27,6 +27,15 @@ const Dashboard = () => {
     }
   }, [orgId]);
 
+    // ADD THIS 👇
+  useEffect(() => {
+    if (!orgId) return;
+    api.post("/analytics/track", {
+      orgId,
+      metrics: { sessions: 1, pageViews: 1, activeUsers: 1, newSignups: 0, revenue: 0 }
+    }).catch(() => {});
+  }, [orgId]);
+
   return (
     <div style={{ fontFamily: "sans-serif" }}>
       <div style={{ color: "#fff", fontSize: 22, fontWeight: 700, marginBottom: 4 }}>Dashboard</div>
