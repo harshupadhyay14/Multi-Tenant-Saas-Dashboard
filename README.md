@@ -12,12 +12,10 @@ A **production-grade, full-stack multi-tenant SaaS dashboard** built with React,
 
 🌐 **Live Demo:** [https://d3sot9e00pp6q1.cloudfront.net](https://d3sot9e00pp6q1.cloudfront.net)
 
-<img width="1919" height="826" alt="image" src="https://github.com/user-attachments/assets/32046e09-0f72-4846-8e39-48da2a03a0bd" />
-<img width="1919" height="824" alt="image" src="https://github.com/user-attachments/assets/38f32039-fb54-419e-bd9b-3b15ce5fb2cf" />
-<img width="1919" height="827" alt="image" src="https://github.com/user-attachments/assets/78ac36f7-3027-4067-87e1-4f3bf9d38d53" />
-<img width="1919" height="827" alt="image" src="https://github.com/user-attachments/assets/ee948c2e-6582-4ed3-b55d-0220fd7c8d27" />
-<img width="1919" height="829" alt="image" src="https://github.com/user-attachments/assets/636d0bab-7984-4459-aeab-08a8dcf2a30d" />
-
+<img width="960" height="414" alt="Screenshot 2026-04-08 234926" src="https://github.com/user-attachments/assets/71dfd583-a65e-471d-83a8-1d504b7b0268" />
+<img width="960" height="413" alt="Screenshot 2026-04-08 234947" src="https://github.com/user-attachments/assets/499a453d-b1a2-44fa-a366-4b37e850ece4" />
+<img width="960" height="414" alt="Screenshot 2026-04-08 235208" src="https://github.com/user-attachments/assets/c15dd5e0-505e-426f-a1e1-199fe7bed3b9" />
+<img width="960" height="409" alt="Screenshot 2026-04-08 235231" src="https://github.com/user-attachments/assets/e5ddb6f6-15d3-41f0-bbe4-1a5196d5bbf4" />
 
 ---
 
@@ -116,8 +114,8 @@ A **production-grade, full-stack multi-tenant SaaS dashboard** built with React,
 
 **Demo credentials:**
 ```
-Email:    testuser@example.com
-Password: TestPass123!
+Email:    admin@acme.com
+Password: Harsh123
 ```
 
 ---
@@ -242,11 +240,13 @@ To upgrade to `super_admin`, go to **MongoDB Atlas → Collections → users** �
 | POST | `/api/analytics/track` | Track metrics for current period |
 | GET | `/api/analytics/:orgId` | Get analytics history |
 
-### Org / Uploads
+### Organizations / Uploads
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | `/api/org/logo/presign` | Request a presigned S3 URL for logo upload |
-| PATCH | `/api/org/logo` | Save the uploaded logo's S3 URL to the org record |
+| POST | `/api/organizations/logo/presign` | Request a presigned S3 URL for logo upload |
+| PATCH | `/api/organizations/logo` | Save the uploaded logo's S3 URL to the org record |
+
+> ⚠️ Double-check these two paths against `backend/routes/organizations.js` — inferred from the file/router naming, not read directly.
 
 ---
 
@@ -256,40 +256,58 @@ To upgrade to `super_admin`, go to **MongoDB Atlas → Collections → users** �
 Multi-Tenant-Saas-Dashboard/
 ├── backend/
 │   ├── config/
-│   │   └── db.js               # MongoDB connection
+│   │   ├── aws.js              # shared AWS SDK client setup
+│   │   ├── db.js                # MongoDB connection
+│   │   ├── s3.js                 # S3 client + presign helpers
+│   │   ├── sns.js                # SNS client
+│   │   └── sqs.js                # SQS client
 │   ├── middleware/
-│   │   └── auth.js             # JWT middleware
+│   │   └── auth.js              # JWT middleware
 │   ├── models/
-│   │   ├── User.js
+│   │   ├── Analytics.js
 │   │   ├── Organization.js
-│   │   └── Analytics.js
+│   │   └── User.js
 │   ├── routes/
-│   │   ├── auth.js
-│   │   ├── users.js
 │   │   ├── analytics.js
-│   │   └── org.js              # presigned S3 URL + logo save routes
-│   ├── workers/
-│   │   └── emailWorker.js      # SQS consumer → SNS email trigger
-│   ├── .env                    # ← not committed
-│   └── server.js
+│   │   ├── auth.js
+│   │   ├── organizations.js     # presigned S3 URL + logo save routes
+│   │   └── users.js
+│   ├── scripts/
+│   │   └── seedAnalytics.js     # local dev data seeding
+│   ├── .dockerignore
+│   ├── .env                     # ← not committed
+│   ├── Dockerfile
+│   ├── server.js
+│   └── worker.js                # SQS consumer → SNS email trigger
 │
-└── frontend/
-    ├── src/
-    │   ├── api/
-    │   │   └── axios.js        # Axios instance with auth header
-    │   ├── components/
-    │   │   ├── Sidebar.jsx
-    │   │   └── RoleBadge.jsx
-    │   ├── context/
-    │   │   └── AuthContext.jsx # JWT + org context
-    │   ├── pages/
-    │   │   ├── Login.jsx
-    │   │   ├── Dashboard.jsx
-    │   │   ├── Analytics.jsx
-    │   │   ├── Users.jsx
-    │   │   └── Settings.jsx    # includes logo upload card
-    │   └── App.jsx
-    └── .env                    # ← not committed
+├── frontend/
+│   ├── public/                  # CRA default static assets
+│   ├── src/
+│   │   ├── api/
+│   │   │   └── axios.js         # Axios instance with auth header
+│   │   ├── components/
+│   │   │   ├── ProtectedRoute.jsx
+│   │   │   ├── RoleBadge.jsx
+│   │   │   └── Sidebar.jsx
+│   │   ├── context/
+│   │   │   └── AuthContext.jsx  # JWT + org context
+│   │   ├── pages/
+│   │   │   ├── Analytics.jsx
+│   │   │   ├── Dashboard.jsx
+│   │   │   ├── Login.jsx
+│   │   │   ├── Organizations.jsx
+│   │   │   ├── Settings.jsx     # includes logo upload card
+│   │   │   └── Users.jsx
+│   │   └── App.js
+│   └── .env                     # ← not committed
+│
+└── infra/
+    ├── DEPLOY.md
+    ├── ecs-task-definition.json
+    ├── frontend-bucket-policy.json
+    ├── iam-execution-role-secrets-policy.json
+    ├── iam-task-role-permissions-policy.json
+    └── iam-task-role-trust-policy.json
 ```
 
 ---
