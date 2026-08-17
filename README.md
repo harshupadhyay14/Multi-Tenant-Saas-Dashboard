@@ -12,10 +12,12 @@ A **production-grade, full-stack multi-tenant SaaS dashboard** built with React,
 
 🌐 **Live Demo:** [https://d3sot9e00pp6q1.cloudfront.net](https://d3sot9e00pp6q1.cloudfront.net)
 
-<img width="960" height="414" alt="Screenshot 2026-04-08 234926" src="https://github.com/user-attachments/assets/71dfd583-a65e-471d-83a8-1d504b7b0268" />
-<img width="960" height="413" alt="Screenshot 2026-04-08 234947" src="https://github.com/user-attachments/assets/499a453d-b1a2-44fa-a366-4b37e850ece4" />
-<img width="960" height="414" alt="Screenshot 2026-04-08 235208" src="https://github.com/user-attachments/assets/c15dd5e0-505e-426f-a1e1-199fe7bed3b9" />
-<img width="960" height="409" alt="Screenshot 2026-04-08 235231" src="https://github.com/user-attachments/assets/e5ddb6f6-15d3-41f0-bbe4-1a5196d5bbf4" />
+<img width="1919" height="826" alt="Screenshot 2026-08-18 005849" src="https://github.com/user-attachments/assets/940820dd-ed67-447b-8076-51e57f3af0b1" />
+<img width="1919" height="824" alt="Screenshot 2026-08-18 005913" src="https://github.com/user-attachments/assets/07c73d21-3c98-4043-b2e3-7cdaefad36a1" />
+<img width="1919" height="827" alt="Screenshot 2026-08-18 005941" src="https://github.com/user-attachments/assets/f33fccbd-0c98-405f-9ab0-88078e1cc1e0" />
+<img width="1919" height="827" alt="Screenshot 2026-08-18 010000" src="https://github.com/user-attachments/assets/7aa2e794-e852-4e14-9f52-7f11d52ee143" />
+<img width="1919" height="829" alt="Screenshot 2026-08-18 010025" src="https://github.com/user-attachments/assets/0f8affd8-1452-4157-b92d-67a4d0562633" />
+
 
 ---
 
