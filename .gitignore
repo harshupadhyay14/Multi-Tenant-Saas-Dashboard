@@ -1,23 +1,5 @@
-# Root
+.env
+.env.*
+!.env.example
 node_modules/
-package-lock.json
-
-# Backend
-backend/.env
-backend/node_modules/
-backend/logs/
-
-# Frontend
-frontend/.env
-frontend/node_modules/
-frontend/build/
-
-# OS files
-.DS_Store
-Thumbs.db
-
-# IDE
-.vscode/
-.idea/
-*.suo
-*.user
+build/
