@@ -12,10 +12,12 @@ A **production-grade, full-stack multi-tenant SaaS dashboard** built with React,
 
 🌐 **Live Demo:** [https://d3sot9e00pp6q1.cloudfront.net](https://d3sot9e00pp6q1.cloudfront.net)
 
-<img width="960" height="414" alt="Screenshot 2026-04-08 234926" src="https://github.com/user-attachments/assets/71dfd583-a65e-471d-83a8-1d504b7b0268" />
-<img width="960" height="413" alt="Screenshot 2026-04-08 234947" src="https://github.com/user-attachments/assets/499a453d-b1a2-44fa-a366-4b37e850ece4" />
-<img width="960" height="414" alt="Screenshot 2026-04-08 235208" src="https://github.com/user-attachments/assets/c15dd5e0-505e-426f-a1e1-199fe7bed3b9" />
-<img width="960" height="409" alt="Screenshot 2026-04-08 235231" src="https://github.com/user-attachments/assets/e5ddb6f6-15d3-41f0-bbe4-1a5196d5bbf4" />
+<img width="1919" height="826" alt="image" src="https://github.com/user-attachments/assets/32046e09-0f72-4846-8e39-48da2a03a0bd" />
+<img width="1919" height="824" alt="image" src="https://github.com/user-attachments/assets/38f32039-fb54-419e-bd9b-3b15ce5fb2cf" />
+<img width="1919" height="827" alt="image" src="https://github.com/user-attachments/assets/78ac36f7-3027-4067-87e1-4f3bf9d38d53" />
+<img width="1919" height="827" alt="image" src="https://github.com/user-attachments/assets/ee948c2e-6582-4ed3-b55d-0220fd7c8d27" />
+<img width="1919" height="829" alt="image" src="https://github.com/user-attachments/assets/636d0bab-7984-4459-aeab-08a8dcf2a30d" />
+
 
 ---
 
@@ -114,8 +116,8 @@ A **production-grade, full-stack multi-tenant SaaS dashboard** built with React,
 
 **Demo credentials:**
 ```
-Email:    admin@acme.com
-Password: Harsh123
+Email:    testuser@example.com
+Password: TestPass123!
 ```
 
 ---
