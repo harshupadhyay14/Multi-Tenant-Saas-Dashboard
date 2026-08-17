@@ -1,0 +1,67 @@
+{
+  "family": "saasboard-backend",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "512",
+  "memory": "1024",
+  "executionRoleArn": "arn:aws:iam::352801351904:role/saasboard-ecs-execution-role",
+  "taskRoleArn": "arn:aws:iam::352801351904:role/saasboard-ecs-task-role",
+  "containerDefinitions": [
+    {
+      "name": "saasboard-api",
+      "image": "352801351904.dkr.ecr.ap-south-1.amazonaws.com/saasboard-backend:latest",
+      "essential": true,
+      "portMappings": [{ "containerPort": 5000, "protocol": "tcp" }],
+      "environment": [
+        { "name": "NODE_ENV", "value": "production" },
+        { "name": "AWS_REGION", "value": "ap-south-1" }
+      ],
+      "secrets": [
+        { "name": "MONGO_URI", "valueFrom": "arn:aws:secretsmanager:ap-south-1:352801351904:secret:saasboard/mongo-uri-uzaQhC" },
+        { "name": "JWT_SECRET", "valueFrom": "arn:aws:secretsmanager:ap-south-1:352801351904:secret:saasboard/jwt-secret-HmWNY3" },
+        { "name": "S3_BUCKET_NAME", "valueFrom": "arn:aws:secretsmanager:ap-south-1:352801351904:secret:saasboard/s3-bucket-LJkhkv" },
+        { "name": "SQS_INVITE_QUEUE_URL", "valueFrom": "arn:aws:secretsmanager:ap-south-1:352801351904:secret:saasboard/sqs-queue-url-AWezth" },
+        { "name": "SNS_INVITE_TOPIC_ARN", "valueFrom": "arn:aws:secretsmanager:ap-south-1:352801351904:secret:saasboard/sns-topic-arn-w9pDgx" },
+        { "name": "CLIENT_URL", "valueFrom": "arn:aws:secretsmanager:ap-south-1:352801351904:secret:saasboard/client-url-ck33BA" }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/saasboard-backend",
+          "awslogs-region": "ap-south-1",
+          "awslogs-stream-prefix": "api"
+        }
+      },
+      "healthCheck": {
+        "command": ["CMD-SHELL", "node -e \"require('http').get('http://localhost:5000/health', r => process.exit(r.statusCode===200?0:1))\""],
+        "interval": 30,
+        "timeout": 5,
+        "retries": 3,
+        "startPeriod": 10
+      }
+    },
+    {
+      "name": "saasboard-worker",
+      "image": "352801351904.dkr.ecr.ap-south-1.amazonaws.com/saasboard-backend:latest",
+      "command": ["node", "worker.js"],
+      "essential": false,
+      "environment": [
+        { "name": "NODE_ENV", "value": "production" },
+        { "name": "AWS_REGION", "value": "ap-south-1" }
+      ],
+      "secrets": [
+        { "name": "SQS_INVITE_QUEUE_URL", "valueFrom": "arn:aws:secretsmanager:ap-south-1:352801351904:secret:saasboard/sqs-queue-url-AWezth" },
+        { "name": "SNS_INVITE_TOPIC_ARN", "valueFrom": "arn:aws:secretsmanager:ap-south-1:352801351904:secret:saasboard/sns-topic-arn-w9pDgx" },
+        { "name": "CLIENT_URL", "valueFrom": "arn:aws:secretsmanager:ap-south-1:352801351904:secret:saasboard/client-url-ck33BA" }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/saasboard-backend",
+          "awslogs-region": "ap-south-1",
+          "awslogs-stream-prefix": "worker"
+        }
+      }
+    }
+  ]
+}

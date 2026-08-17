@@ -5,7 +5,7 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user, loading } = useAuth();
 
   if (loading) return (
-  <div style={{ color: "#fff", padding: 40, background: "#06060f", minHeight: "100vh" }}>
+  <div style={{ color: "#F2EFE9", padding: 40, background: "#14120F", minHeight: "100vh" }}>
     Loading...
   </div>
   );

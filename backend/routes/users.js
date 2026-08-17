@@ -4,6 +4,7 @@ const { body, validationResult } = require("express-validator");
 const User = require("../models/User");
 const Organization = require("../models/Organization");
 const { protect, requireOrgRole, superAdminOnly } = require("../middleware/auth");
+const { enqueueInviteEmail } = require("../config/sqs");
 
 // All routes require authentication
 router.use(protect);
@@ -88,7 +89,16 @@ router.post(
       user.memberships.push({ orgId, role, status: "invited" });
       await user.save();
 
-      // In production: send invite email here via nodemailer / Resend
+      // Fire-and-forget: push to SQS so the API responds immediately.
+      // A separate worker (backend/worker.js) picks this up and sends
+      // the actual notification via SNS, with its own retry/DLQ handling.
+      try {
+        await enqueueInviteEmail({ email, orgName: org.name, role, invitedBy: req.user.email });
+      } catch (queueErr) {
+        // Don't fail the invite if the queue is briefly unavailable —
+        // log it; the invite record itself is already saved.
+        console.error("Failed to enqueue invite email:", queueErr.message);
+      }
 
       res.status(201).json({
         success: true,

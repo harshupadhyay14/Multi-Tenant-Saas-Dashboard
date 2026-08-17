@@ -16,6 +16,7 @@ const organizationSchema = new mongoose.Schema(
     },
     trialEndsAt: { type: Date },
     mrr: { type: Number, default: 0 }, // monthly recurring revenue in USD
+    logoUrl: { type: String }, // S3 object URL for org branding logo
     settings: {
       maxUsers: { type: Number, default: 5 },
       allowedDomains: [String],

@@ -1,12 +1,13 @@
 const STYLES = {
-  super_admin: { bg: "rgba(168,85,247,0.15)", color: "#c084fc", label: "Super Admin" },
-  org_admin:   { bg: "rgba(99,102,241,0.15)",  color: "#818cf8", label: "Org Admin"   },
-  member:      { bg: "rgba(52,211,153,0.15)",  color: "#6ee7b7", label: "Member"      },
-  viewer:      { bg: "rgba(107,114,128,0.15)", color: "#9ca3af", label: "Viewer"      },
+  super_admin: { bg: "rgba(168,98,62,0.15)", color: "#A8623E", label: "Super Admin" },
+  org_admin:   { bg: "rgba(201,138,62,0.15)",  color: "#E0AC6B", label: "Org Admin"   },
+  member:      { bg: "rgba(111,162,135,0.15)",  color: "#8FC0A8", label: "Member"      },
+  viewer:      { bg: "rgba(140,133,117,0.15)", color: "#A89F8C", label: "Viewer"      },
+  user:        { bg: "rgba(140,133,117,0.15)", color: "#A89F8C", label: "User"        },
 };
 
 const RoleBadge = ({ role }) => {
-  const s = STYLES[role] || STYLES.viewer;
+  const s = STYLES[role] || STYLES.user;
   return (
     <span style={{
       background: s.bg, color: s.color,
