@@ -4,24 +4,18 @@
 ![Node.js](https://img.shields.io/badge/Node.js-18+-339933?style=for-the-badge&logo=node.js&logoColor=white)
 ![Express](https://img.shields.io/badge/Express-4.x-000000?style=for-the-badge&logo=express&logoColor=white)
 ![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-47A248?style=for-the-badge&logo=mongodb&logoColor=white)
+![AWS](https://img.shields.io/badge/AWS-Fargate%20%7C%20CloudFront%20%7C%20S3-FF9900?style=for-the-badge&logo=amazonaws&logoColor=white)
 ![JWT](https://img.shields.io/badge/JWT-Auth-000000?style=for-the-badge&logo=jsonwebtokens&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)
 
-A **production-grade, full-stack multi-tenant SaaS dashboard** built with React, Node.js, Express, and MongoDB. Features JWT authentication, role-based access control (RBAC), real-time analytics, and organization-based user management — mirroring the architecture of real-world SaaS platforms like Notion and Slack.
+A **production-grade, full-stack multi-tenant SaaS dashboard** built with React, Node.js, Express, and MongoDB — deployed on real AWS infrastructure (ECS Fargate, CloudFront, S3, SQS/SNS). Features JWT authentication, role-based access control (RBAC), real-time analytics, organization-based user management, and direct-to-S3 file uploads — mirroring the architecture of real-world SaaS platforms like Notion and Slack.
 
-🌐 **Live Demo:** [https://saas-dashboard-frontend-jdyf.onrender.com](https://saas-dashboard-frontend-jdyf.onrender.com)
-🔗 **Backend API:** [https://saas-dashboard-backend-84ds.onrender.com](https://saas-dashboard-backend-84ds.onrender.com)
-
-> ⚠️ Hosted on Render free tier — first load may take 30–60 seconds to spin up.
+🌐 **Live Demo:** [https://d3sot9e00pp6q1.cloudfront.net](https://d3sot9e00pp6q1.cloudfront.net)
 
 <img width="960" height="414" alt="Screenshot 2026-04-08 234926" src="https://github.com/user-attachments/assets/71dfd583-a65e-471d-83a8-1d504b7b0268" />
 <img width="960" height="413" alt="Screenshot 2026-04-08 234947" src="https://github.com/user-attachments/assets/499a453d-b1a2-44fa-a366-4b37e850ece4" />
 <img width="960" height="414" alt="Screenshot 2026-04-08 235208" src="https://github.com/user-attachments/assets/c15dd5e0-505e-426f-a1e1-199fe7bed3b9" />
 <img width="960" height="409" alt="Screenshot 2026-04-08 235231" src="https://github.com/user-attachments/assets/e5ddb6f6-15d3-41f0-bbe4-1a5196d5bbf4" />
-
-
-
-
 
 ---
 
@@ -32,6 +26,8 @@ A **production-grade, full-stack multi-tenant SaaS dashboard** built with React,
 - 👥 **Role-Based Access Control** — `super_admin`, `org_admin`, `member`, `viewer` roles
 - 📊 **Live Analytics Dashboard** — Sessions, revenue, active users, and signups — charted with Recharts
 - 👤 **User Management** — Invite users by email, assign roles, track status
+- 🖼️ **Organization Logo Upload** — Direct browser-to-S3 upload via presigned URLs, no file ever touches the backend
+- 📧 **Async Email Notifications** — SQS-backed worker triggers SNS emails on key events, decoupled from the request/response cycle
 - 📈 **KPI Cards** — Real-time metrics pulled from MongoDB
 - 🌐 **RESTful API** — Clean Express backend with protected routes and middleware
 - 🗄️ **MongoDB Atlas** — Cloud database with indexed collections
@@ -46,9 +42,53 @@ A **production-grade, full-stack multi-tenant SaaS dashboard** built with React,
 | Backend | Node.js, Express.js |
 | Database | MongoDB Atlas (Mongoose ODM) |
 | Auth | JWT (JSON Web Tokens), bcrypt |
+| File Storage | AWS S3 (presigned PUT uploads) |
+| Async Processing | AWS SQS (queue) → worker → AWS SNS (email) |
+| Compute | AWS ECS Fargate behind an Application Load Balancer |
+| CDN / Edge | AWS CloudFront (serves frontend + proxies API) |
+| Secrets | AWS Secrets Manager |
+| Logging | AWS CloudWatch Logs |
+| IAM | Scoped task roles (least-privilege per service) |
 | Styling | Inline CSS (dark futuristic theme) |
 | Icons | Lucide React |
 | Dev Tools | Nodemon, ESLint |
+
+---
+
+## ☁️ AWS Architecture
+
+```
+                        ┌─────────────────────┐
+                        │   AWS CloudFront     │
+                        │  (CDN + API proxy)   │
+                        └──────────┬───────────┘
+                                   │
+                 ┌─────────────────┴─────────────────┐
+                 │                                    │
+        ┌────────▼────────┐                ┌──────────▼──────────┐
+        │  S3 (frontend)   │                │   ALB → ECS Fargate │
+        │  static React    │                │   (Express backend) │
+        │  build           │                └──────────┬──────────┘
+        └──────────────────┘                            │
+                                     ┌────────────────────┼───────────────────┐
+                                     │                    │                   │
+                            ┌────────▼───────┐   ┌────────▼────────┐ ┌────────▼────────┐
+                            │  MongoDB Atlas  │   │  S3 (org logos)  │ │   AWS SQS queue  │
+                            │                 │   │  presigned PUT   │ │  → worker → SNS  │
+                            └─────────────────┘   └──────────────────┘ └──────────────────┘
+
+        Secrets Manager → injects DB URI / JWT secret into the Fargate task
+        CloudWatch Logs → captures backend + worker logs
+        IAM task roles  → scoped per-service (S3 PutObject, SQS, SNS, Secrets read)
+```
+
+**Request flow highlights:**
+- The React build is served as a static site from S3, fronted by CloudFront.
+- CloudFront also proxies `/api/*` to an Application Load Balancer, which routes to the Express backend running as an ECS Fargate task.
+- Organization logo uploads never pass through the backend: the client requests a **presigned S3 URL** from the API, then uploads the file **directly to S3** via a `PUT` request. This keeps the backend stateless and avoids proxying large file payloads.
+- Certain backend events publish to an **SQS queue**; a worker process consumes the queue and triggers **SNS** to send email notifications — decoupling slow/unreliable email delivery from the main request path.
+- All secrets (Mongo URI, JWT secret) are pulled from **Secrets Manager** at task startup rather than hardcoded or committed.
+- IAM roles are scoped per service — the Fargate task role only has the specific S3/SQS/SNS/Secrets Manager permissions it needs.
 
 ---
 
@@ -62,7 +102,7 @@ A **production-grade, full-stack multi-tenant SaaS dashboard** built with React,
 | **Dashboard** | KPI cards + live sessions chart |
 | **Analytics** | Revenue, Active Users, Sessions — 3 Recharts graphs |
 | **Users** | Member table with role badges, invite modal |
-| **Settings** | Org settings panel |
+| **Settings** | Org settings panel + logo upload (direct-to-S3) |
 
 ---
 
@@ -70,8 +110,7 @@ A **production-grade, full-stack multi-tenant SaaS dashboard** built with React,
 
 | | URL |
 |-|-----|
-| **Frontend** | https://saas-dashboard-frontend-jdyf.onrender.com |
-| **Backend API** | https://saas-dashboard-backend-84ds.onrender.com |
+| **App (frontend + API)** | https://d3sot9e00pp6q1.cloudfront.net |
 
 **Demo credentials:**
 ```
@@ -81,12 +120,13 @@ Password: Harsh123
 
 ---
 
-## 🚀 Getting Started
+## 🚀 Getting Started (Local Development)
 
 ### Prerequisites
 
 - Node.js v18+
 - MongoDB Atlas account (free tier works)
+- AWS account (for S3 presigned uploads and SQS/SNS features — optional if you just want core auth/dashboard/analytics working locally)
 - npm
 
 ### 1. Clone the repo
@@ -110,6 +150,14 @@ MONGO_URI=mongodb+srv://<username>:<password>@cluster0.xxxxx.mongodb.net/saas_da
 JWT_SECRET=your_jwt_secret_here
 PORT=5000
 NODE_ENV=development
+
+# AWS (only needed for logo upload + email worker features)
+AWS_REGION=ap-south-1
+AWS_ACCESS_KEY_ID=your_key
+AWS_SECRET_ACCESS_KEY=your_secret
+S3_LOGO_BUCKET=your-bucket-name
+SQS_QUEUE_URL=your_queue_url
+SNS_TOPIC_ARN=your_topic_arn
 ```
 
 Start the backend:
@@ -192,6 +240,12 @@ To upgrade to `super_admin`, go to **MongoDB Atlas → Collections → users** �
 | POST | `/api/analytics/track` | Track metrics for current period |
 | GET | `/api/analytics/:orgId` | Get analytics history |
 
+### Org / Uploads
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/org/logo/presign` | Request a presigned S3 URL for logo upload |
+| PATCH | `/api/org/logo` | Save the uploaded logo's S3 URL to the org record |
+
 ---
 
 ## 🗂️ Project Structure
@@ -210,7 +264,10 @@ Multi-Tenant-Saas-Dashboard/
 │   ├── routes/
 │   │   ├── auth.js
 │   │   ├── users.js
-│   │   └── analytics.js
+│   │   ├── analytics.js
+│   │   └── org.js              # presigned S3 URL + logo save routes
+│   ├── workers/
+│   │   └── emailWorker.js      # SQS consumer → SNS email trigger
 │   ├── .env                    # ← not committed
 │   └── server.js
 │
@@ -228,7 +285,7 @@ Multi-Tenant-Saas-Dashboard/
     │   │   ├── Dashboard.jsx
     │   │   ├── Analytics.jsx
     │   │   ├── Users.jsx
-    │   │   └── Settings.jsx
+    │   │   └── Settings.jsx    # includes logo upload card
     │   └── App.jsx
     └── .env                    # ← not committed
 ```
@@ -241,6 +298,9 @@ Multi-Tenant-Saas-Dashboard/
 - **RBAC** is enforced both on the backend (middleware checks `systemRole` and membership `role`) and on the frontend (UI elements conditionally rendered by role)
 - **JWT tokens** are stored in `localStorage` and attached to every API request via an Axios interceptor
 - **Analytics** are aggregated by `period` (YYYY-MM format), enabling month-over-month charting
+- **File uploads bypass the backend entirely** — the API only issues a short-lived presigned S3 URL; the actual bytes go straight from the browser to S3, keeping the Fargate task stateless and reducing load
+- **Async email delivery** — instead of sending email synchronously inside a request handler, events are pushed to SQS and processed by a separate worker, so a slow email provider can never block or fail an API response
+- **Infrastructure is fully containerized and cloud-native** — no long-running servers to manage by hand; ECS Fargate handles scheduling, CloudWatch handles observability, and Secrets Manager handles credential rotation without code changes
 
 ---
 
@@ -256,4 +316,4 @@ MIT © [Harsh Upadhyay](https://github.com/harshupadhyay14)
 
 ---
 
-> Built as a full-stack portfolio project demonstrating multi-tenant SaaS architecture, JWT auth, RBAC, and real-time analytics.
+> Built as a full-stack portfolio project demonstrating multi-tenant SaaS architecture on real AWS infrastructure — JWT auth, RBAC, direct-to-S3 uploads, async email via SQS/SNS, and real-time analytics.
