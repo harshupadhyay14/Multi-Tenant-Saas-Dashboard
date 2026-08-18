@@ -10,16 +10,14 @@
 
 A **production-grade, full-stack multi-tenant SaaS dashboard** built with React, Node.js, Express, and MongoDB — deployed on real AWS infrastructure (ECS Fargate, CloudFront, S3, SQS/SNS). Features JWT authentication, role-based access control (RBAC), real-time analytics, organization-based user management, and direct-to-S3 file uploads — mirroring the architecture of real-world SaaS platforms like Notion and Slack.
 
-🌐 **Live Demo:** [https://d3sot9e00pp6q1.cloudfront.net](https://d3sot9e00pp6q1.cloudfront.net)
+🌐 **Live Frontend:** [https://d3sot9e00pp6q1.cloudfront.net](https://d3sot9e00pp6q1.cloudfront.net)
+🔗 **Live API:** [https://dscmlp496tr1b.cloudfront.net/api](https://dscmlp496tr1b.cloudfront.net/api)
 
 <img width="1919" height="826" alt="Screenshot 2026-08-18 005849" src="https://github.com/user-attachments/assets/940820dd-ed67-447b-8076-51e57f3af0b1" />
 <img width="1919" height="824" alt="Screenshot 2026-08-18 005913" src="https://github.com/user-attachments/assets/07c73d21-3c98-4043-b2e3-7cdaefad36a1" />
 <img width="1919" height="827" alt="Screenshot 2026-08-18 005941" src="https://github.com/user-attachments/assets/f33fccbd-0c98-405f-9ab0-88078e1cc1e0" />
 <img width="1919" height="827" alt="Screenshot 2026-08-18 010000" src="https://github.com/user-attachments/assets/7aa2e794-e852-4e14-9f52-7f11d52ee143" />
 <img width="1919" height="829" alt="Screenshot 2026-08-18 010025" src="https://github.com/user-attachments/assets/0f8affd8-1452-4157-b92d-67a4d0562633" />
-
-
----
 
 ## ✨ Features
 
@@ -86,11 +84,11 @@ A **production-grade, full-stack multi-tenant SaaS dashboard** built with React,
 
 **Request flow highlights:**
 - The React build is served as a static site from S3, fronted by CloudFront.
-- CloudFront also proxies `/api/*` to an Application Load Balancer, which routes to the Express backend running as an ECS Fargate task.
+- A second CloudFront distribution sits in front of the ALB purely to terminate HTTPS for the API — this avoids needing a custom domain + ACM certificate just for a demo deployment.
 - Organization logo uploads never pass through the backend: the client requests a **presigned S3 URL** from the API, then uploads the file **directly to S3** via a `PUT` request. This keeps the backend stateless and avoids proxying large file payloads.
-- Certain backend events publish to an **SQS queue**; a worker process consumes the queue and triggers **SNS** to send email notifications — decoupling slow/unreliable email delivery from the main request path.
-- All secrets (Mongo URI, JWT secret) are pulled from **Secrets Manager** at task startup rather than hardcoded or committed.
-- IAM roles are scoped per service — the Fargate task role only has the specific S3/SQS/SNS/Secrets Manager permissions it needs.
+- Certain backend events publish to an **SQS queue** (with a dead-letter queue for messages that fail 3 times); a worker process consumes the queue and triggers **SNS** to send email notifications — decoupling slow/unreliable email delivery from the main request path.
+- All secrets (Mongo URI, JWT secret, bucket name, queue URL, topic ARN) are pulled from **Secrets Manager** at task startup rather than hardcoded or committed.
+- IAM roles are scoped per service — the Fargate task role only has the specific S3/SQS/SNS/CloudWatch permissions it needs; a separate execution role handles image pulls and secrets fetching.
 
 ---
 
@@ -112,12 +110,13 @@ A **production-grade, full-stack multi-tenant SaaS dashboard** built with React,
 
 | | URL |
 |-|-----|
-| **App (frontend + API)** | https://d3sot9e00pp6q1.cloudfront.net |
+| **Frontend** | https://d3sot9e00pp6q1.cloudfront.net |
+| **Backend API** | https://dscmlp496tr1b.cloudfront.net/api |
 
 **Demo credentials:**
 ```
-Email:    admin@acme.com
-Password: Harsh123
+Email:    testuser@example.com
+Password: TestPass123!
 ```
 
 ---
@@ -145,21 +144,20 @@ cd backend
 npm install
 ```
 
-Create a `.env` file in the `backend/` folder:
+Create a `.env` file in the `backend/` folder (see `.env.example` for the full list):
 
 ```env
 MONGO_URI=mongodb+srv://<username>:<password>@cluster0.xxxxx.mongodb.net/saas_dashboard
 JWT_SECRET=your_jwt_secret_here
 PORT=5000
 NODE_ENV=development
+CLIENT_URL=http://localhost:3000
 
 # AWS (only needed for logo upload + email worker features)
 AWS_REGION=ap-south-1
-AWS_ACCESS_KEY_ID=your_key
-AWS_SECRET_ACCESS_KEY=your_secret
-S3_LOGO_BUCKET=your-bucket-name
-SQS_QUEUE_URL=your_queue_url
-SNS_TOPIC_ARN=your_topic_arn
+S3_BUCKET_NAME=your-bucket-name
+SQS_INVITE_QUEUE_URL=your_queue_url
+SNS_INVITE_TOPIC_ARN=your_topic_arn
 ```
 
 Start the backend:
@@ -201,7 +199,7 @@ Go to → **http://localhost:3000**
 
 ## 🔑 Creating Your First User
 
-Register via Postman or any API client:
+Register via the UI at `/login`, or via Postman/any API client:
 
 ```
 POST http://localhost:5000/api/auth/register
@@ -234,21 +232,22 @@ To upgrade to `super_admin`, go to **MongoDB Atlas → Collections → users** �
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/api/users/org/:orgId` | List org members |
-| POST | `/api/users/invite` | Invite user to org |
+| POST | `/api/users/invite` | Invite user to org (queues SQS job) |
+| PATCH | `/api/users/:userId/role` | Change a user's role |
+| DELETE | `/api/users/:userId/org/:orgId` | Remove user from org |
+
+### Organizations / Uploads
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/organizations/mine` | Orgs the current user belongs to |
+| POST | `/api/organizations/:orgId/logo-upload-url` | Request a presigned S3 URL for logo upload |
+| PATCH | `/api/organizations/:orgId/logo` | Save the uploaded logo's S3 URL to the org record |
 
 ### Analytics
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | POST | `/api/analytics/track` | Track metrics for current period |
-| GET | `/api/analytics/:orgId` | Get analytics history |
-
-### Organizations / Uploads
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/api/organizations/logo/presign` | Request a presigned S3 URL for logo upload |
-| PATCH | `/api/organizations/logo` | Save the uploaded logo's S3 URL to the org record |
-
-> ⚠️ Double-check these two paths against `backend/routes/organizations.js` — inferred from the file/router naming, not read directly.
+| GET | `/api/analytics/org/:orgId` | Get analytics history |
 
 ---
 
@@ -321,7 +320,7 @@ Multi-Tenant-Saas-Dashboard/
 - **JWT tokens** are stored in `localStorage` and attached to every API request via an Axios interceptor
 - **Analytics** are aggregated by `period` (YYYY-MM format), enabling month-over-month charting
 - **File uploads bypass the backend entirely** — the API only issues a short-lived presigned S3 URL; the actual bytes go straight from the browser to S3, keeping the Fargate task stateless and reducing load
-- **Async email delivery** — instead of sending email synchronously inside a request handler, events are pushed to SQS and processed by a separate worker, so a slow email provider can never block or fail an API response
+- **Async email delivery** — instead of sending email synchronously inside a request handler, events are pushed to SQS and processed by a separate worker, so a slow email provider can never block or fail an API response. A dead-letter queue catches messages that fail repeatedly.
 - **Infrastructure is fully containerized and cloud-native** — no long-running servers to manage by hand; ECS Fargate handles scheduling, CloudWatch handles observability, and Secrets Manager handles credential rotation without code changes
 
 ---
