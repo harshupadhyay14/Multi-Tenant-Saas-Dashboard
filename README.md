@@ -21,7 +21,8 @@ The live demo below runs on a free-tier stack (Render + MongoDB Atlas). A produc
 <img width="1919" height="824" alt="Screenshot 2026-08-18 005913" src="https://github.com/user-attachments/assets/07c73d21-3c98-4043-b2e3-7cdaefad36a1" />
 <img width="1919" height="827" alt="Screenshot 2026-08-18 005941" src="https://github.com/user-attachments/assets/f33fccbd-0c98-405f-9ab0-88078e1cc1e0" />
 <img width="1919" height="827" alt="Screenshot 2026-08-18 010000" src="https://github.com/user-attachments/assets/7aa2e794-e852-4e14-9f52-7f11d52ee143" />
-<img width="1919" height="829" alt="Screenshot 2026-08-18 010025" src="https://github.com/user-attachments/assets/0f8affd8-1452-4157-b92d-67a4d0562633" />
+<img width="1896" height="827" alt="image" src="https://github.com/user-attachments/assets/193834a5-062f-4050-a8f0-71b1e6251926" />
+
 
 ## ✨ Features
 
