@@ -26,22 +26,14 @@ const Settings = () => {
     setUploading(true);
     setUploadMsg("");
     try {
-      // 1. Ask our API for a short-lived presigned S3 URL
-      const { data } = await api.post(`/organizations/${orgId}/logo-upload-url`, {
-        contentType: file.type,
+      const formData = new FormData();
+      formData.append("logo", file);
+
+      const { data } = await api.post(`/organizations/${orgId}/logo`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
       });
 
-      // 2. Upload the file directly to S3 (never touches our backend)
-      await fetch(data.uploadUrl, {
-        method: "PUT",
-        headers: { "Content-Type": file.type },
-        body: file,
-      });
-
-      // 3. Tell our API the upload finished, so it can save the URL
-      await api.patch(`/organizations/${orgId}/logo`, { logoUrl: data.publicUrl });
-
-      setLogoUrl(data.publicUrl);
+      setLogoUrl(data.org.logoUrl);
       setUploadMsg("Logo uploaded!");
     } catch (err) {
       setUploadMsg(err?.response?.data?.message || "Upload failed");
@@ -83,7 +75,7 @@ const Settings = () => {
         <div style={{ background: "#1D1A15", border: "1px solid #2C2820", borderRadius: 14, padding: 28 }}>
           <div style={{ color: "#E8E3D8", fontWeight: 600, fontSize: 14, marginBottom: 6 }}>Organization Logo</div>
           <div style={{ color: "#8C8575", fontSize: 12, marginBottom: 20 }}>
-            Stored in S3 via a presigned upload URL — the file never passes through our server.
+            Uploaded to the server and served as a static file.
           </div>
 
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>

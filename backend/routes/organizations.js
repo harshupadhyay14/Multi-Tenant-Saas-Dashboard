@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const Organization = require("../models/Organization");
 const { protect, superAdminOnly, requireOrgRole } = require("../middleware/auth");
-const { getPresignedUploadUrl } = require("../config/s3");
+const { uploadLogo, publicUrlFor } = require("../config/upload");
 
 router.use(protect);
 
@@ -35,43 +35,35 @@ router.get("/:orgId", requireOrgRole("org_admin", "member", "viewer"), async (re
   }
 });
 
-// ── POST /api/organizations/:orgId/logo-upload-url ────────────────────────────
-// Returns a short-lived presigned S3 URL. The browser PUTs the file directly
-// to S3 with it, then calls the PATCH below with the resulting object key.
-router.post("/:orgId/logo-upload-url", requireOrgRole("org_admin"), async (req, res) => {
-  const { contentType } = req.body; // e.g. "image/png"
-  if (!contentType?.startsWith("image/")) {
-    return res.status(400).json({ success: false, message: "contentType must be an image type" });
-  }
+// ── POST /api/organizations/:orgId/logo ────────────────────────────────────────
+// Single multipart upload: file lands on local disk (backend/uploads/org-logos)
+// and the org's logoUrl is updated in the same request.
+router.post(
+  "/:orgId/logo",
+  requireOrgRole("org_admin"),
+  (req, res, next) => {
+    uploadLogo.single("logo")(req, res, (err) => {
+      if (err) return res.status(400).json({ success: false, message: err.message });
+      next();
+    });
+  },
+  async (req, res) => {
+    if (!req.file) return res.status(400).json({ success: false, message: "logo file required" });
 
-  try {
-    const key = `org-logos/${req.params.orgId}/${Date.now()}-logo`;
-    const { uploadUrl, publicUrl } = await getPresignedUploadUrl(key, contentType);
-    res.json({ success: true, uploadUrl, publicUrl, key });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: "Could not generate upload URL" });
+    try {
+      const logoUrl = publicUrlFor(req.file.filename);
+      const org = await Organization.findByIdAndUpdate(
+        req.params.orgId,
+        { logoUrl },
+        { new: true }
+      );
+      if (!org) return res.status(404).json({ success: false, message: "Org not found" });
+      res.json({ success: true, org });
+    } catch (err) {
+      res.status(500).json({ success: false, message: "Server error" });
+    }
   }
-});
-
-// ── PATCH /api/organizations/:orgId/logo ──────────────────────────────────────
-// Called after the browser finishes the direct S3 PUT, to save the URL.
-router.patch("/:orgId/logo", requireOrgRole("org_admin"), async (req, res) => {
-  const { logoUrl } = req.body;
-  if (!logoUrl) return res.status(400).json({ success: false, message: "logoUrl required" });
-
-  try {
-    const org = await Organization.findByIdAndUpdate(
-      req.params.orgId,
-      { logoUrl },
-      { new: true }
-    );
-    if (!org) return res.status(404).json({ success: false, message: "Org not found" });
-    res.json({ success: true, org });
-  } catch (err) {
-    res.status(500).json({ success: false, message: "Server error" });
-  }
-});
+);
 
 // ── PATCH /api/organizations/:orgId ──────────────────────────────────────────
 // Update org (org_admin or super_admin)
